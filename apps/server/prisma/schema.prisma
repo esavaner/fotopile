@@ -9,3 +9,34 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  userName String
+  email    String @unique
+}
+
+model Image {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  url       String
+  createdAt DateTime @default(now())
+
+  // Define a many-to-many relationship with albums
+  albums   Album[]  @relation(fields: [albumIDs], references: [id])
+  albumIDs String[] @db.ObjectId
+}
+
+model Album {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  createdAt DateTime @default(now())
+
+  // Define a many-to-many relationship with images
+  images   Image[]  @relation(fields: [imageIDs], references: [id])
+  imageIDs String[] @db.ObjectId
+
+  // Define a self-referencing relationship for nested albums
+  parentId     String? @db.ObjectId
+  parentAlbum  Album?  @relation("NestedAlbums", fields: [parentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  nestedAlbums Album[] @relation("NestedAlbums")
+}
